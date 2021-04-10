@@ -22,11 +22,10 @@ async function calculate(){
             console.error(err);
             return;
         }
-        let nuWh = countWH(textLower);
-        let nuSub = countSub(textLower);
+        let nuSub_nuWh = countSubAndWh(textLower);
         let nuVf = countUvf(res.data.taggedText);
         let nuNp = countUNp(res.data.taggedText);    
-        resultP.innerText = (2 * nuSub + 2 * nuWh + nuVf + nuNp);
+        resultP.innerText = (2 * nuSub_nuWh + nuVf + nuNp);
     });
 }
 
@@ -47,20 +46,9 @@ function getPartsOfSpeech(text,cb){
 }
 
 
-function countWH(text){
-    let whList = ['where','which','who','why','how','when'];
-    let ret = 0;
-    for(let i = 0 ; i < whList.length ; i++){
-        var re = new RegExp(whList[i], 'g');
-        let matcher = text.match(re);
-        ret+= matcher? matcher.length : 0;
-    }
-    return ret;
-}
-
-
-function countSub(text){
-    let subList = ['that'];
+function countSubAndWh(text){
+	text = " " + text;
+    let subList = ["after[.,; ]" , " although[.,; ]" , " as[.,; ]" , " as if[.,; ]" , " as long as[.,; ]" , " as much as[.,; ]" , " as soon as[.,; ]" , " as though[.,; ]" , " assuming that[.,; ]" , " because[.,; ]" , " before[.,; ]" , " by the time [.,; ]" , " consequently[.,; ]" , " due to[.,; ]" , " even if[.,; ]" , " even though [.,; ]" , " for[.,; ]" , " hence[.,; ]" , " how[.,; ?]" , " if[.,; ]" , " in case [.,; ]" , " in order that[.,; ]" , " in order to[.,; ]" , " lest [.,; ]" , " now[.,; ]" , " now that[.,; ]" , " once[.,; ]" , " only if [.,; ]" , " provided that[.,; ]" , " rather than[.,; ]" , " since[.,; ]" , " so that[.,; ]" , " than[.,; ]" , " that[.,; ]" , " therefore[.,; ]" , " though[.,; ]" , " till [.,; ]" , " unless[.,; ]" , " until[.,; ]" , " what[,; ][^\?]*[\.]\." , " whatever [.,; ]" , " when[.,; ?]" , " whenever[.,; ]" , " where[.,; ?]" , " whereas[.,; ]" , " wherever[.,; ]" , " whether[.,; ]" , " which[.,; ?]" , " whichever[.,; ]" , " while[.,; ]" , " whoever [.,; ]" , " whom[.,; ]" , " whom[.,; ]" , " whomever[.,; ]" , " whosever[.,; ]"," who[.,; ?]","why[.,; ?]","whose[.,; ?]"];
     let ret = 0;
     for(let i = 0 ; i < subList.length ; i++){
         var re = new RegExp(subList[i], 'g');
@@ -73,12 +61,12 @@ function countSub(text){
 
 function countUvf(text){
     
-    let matcher = text.match(/_VBZ/g);
+    let matcher = text.match(/(_VBZ|_VBD|_VBN|_VBP|_MD|_VB)/g);
     return matcher? matcher.length : 0;
 }
 
 
 function countUNp(text){
-    let matcher = text.match(/_NN/g);
+    let matcher = text.match(/(_NN|_PRP|_DT|_IN|_TO|_JJ)/g);
     return matcher? matcher.length : 0;
 }

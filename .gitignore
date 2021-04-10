@@ -85,5 +85,3 @@ typings/
 # Webpack
 .webpack/
 
-# Electron-Forge
-out/
