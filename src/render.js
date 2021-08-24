@@ -5,68 +5,130 @@ const resultP = document.getElementById("resultPar");
 const axios = require('axios');
 var querystring = require('querystring');
 const { match } = require('assert');
+let verbSet = new Set(['_VBZ','_VBG', '_VBD', '_VBN', '_VBP', '_MD', '_VB']);
+// nouns set should add these criteria: '[^as]_IN' and (such_JJ as_IN)
+let nounSet = new Set(['_NN', '_NNP', '_CC', '_PRP', '_DT', '_TO', '_JJ', '_EX', '_RB', '_UH']);
 
-
+let whSet = new Set(
+    ["what", "whatever", "when", "whenever", "where", "whereas", "wherever", "whether", "which", "whichever", "while", "whoever", "whom", "whomever", "whosever", "who", "why", "whose"]);
+// now and now that?
+let subSet = new Set(
+    ['after', 'although', 'because', 'till', 'unless', 'until', 'though', 'therefore', 'that', 'than', 'now', 'before', 'consequently', 'for', 'hence', 'how', 'if', 'once', 'since']);
+let multiWordSub = 
+    ["such as", "as if", "as long as", "as much as", "as soon as", "as though", "assuming that", "by the time", "due to", "even if", "even though", "in case", "in order that", "in order to", "lest", "now that", "only if", "provided that", "rather than", "so that"];
+multiWordSub.map(sub => subSet.add(sub.replace(/ /g,'Q')));
 // set event handler
 calculateButton.onclick = calculate;
 
-async function calculate(){
-    let text = inputTextArea.value;
-    let textLower = text.toLowerCase();
-    
-    
+async function calculate() {
+    let texts = inputTextArea.value.split('\n');
+    for (let i = 0; i < texts.length; i++) {
+        //let textLower = texts[i].toLowerCase();
+        let formatterText = texts[i];
+        // tokenize words with spaces
+        multiWordSub.map(word => {
+            // convert multi word subs to _ like: as soon as => as_soon_as
+            formatterText = texts[i].replace(new RegExp(word,'g'), word.replace(/Q/g,'q').replace(/ /g,'Q'));
+        });
 
-    getPartsOfSpeech(text,(code,res,err)=>{
-        if(err)
-        {
-            console.error(err);
-            return;
+        getPartsOfSpeech(formatterText, (code, res, err) => {
+            if (err) {
+                alert(err);
+                return;
+            }
+            callBack(code, res, texts[i]);
+        });
+    }
+
+}
+
+function callBack(code, res, original){
+    let words = res.data.taggedText.split(' ');
+    let devs = [];
+    let sub = 0, wh = 0, noun = 0, verb = 0;
+    let newDiv = document.createElement('p');
+    for (let j = 0; j < words.length; j++) {
+        let wordSpan = document.createElement('span');
+        devs.push(wordSpan);
+        let trimmedWord = words[j].replace(/_[A-Z;'".,:]+/g,'').toLowerCase();
+        let categorization = words[j].replace(/[A-Za-z]*_/g,'_');
+        wordSpan.innerText = trimmedWord.replace(/Q/g,' ');
+        if(subSet.has(trimmedWord)){
+            wordSpan.classList.add('nsub');
+            sub++;
         }
-        let nuSub_nuWh = countSubAndWh(textLower);
-        let nuVf = countUvf(res.data.taggedText);
-        let nuNp = countUNp(res.data.taggedText);    
-        resultP.innerText = (2 * nuSub_nuWh + nuVf + nuNp);
-    });
+        else if(whSet.has(trimmedWord)){
+            wordSpan.classList.add('wh');
+            wh++;
+        }
+        else if(nounSet.has(categorization)){
+            wordSpan.classList.add('noun');
+            noun++;
+        }
+        else if(verbSet.has(categorization)){
+            wordSpan.classList.add('verb');
+            verb++;
+        }
+        else{
+            wordSpan.classList.add('none');
+        }
+        newDiv.appendChild(wordSpan);
+    }
+    
+    let calculatedP = document.createElement('p');
+    let result = (2 * wh ) + ( 2 * sub) + noun + verb;
+    calculatedP.innerText = result;
+    newDiv.appendChild(calculatedP);
+    
+    resultP.appendChild(newDiv);
+    
+}
+
+function discardNonSubs(text) {
+    // sometimes something like "that" comes as a noun and sometimes as a sub, this function detects if it came as a noun and removes it from the list of subs
+    let nonSubs = text.toLowerCase().match(/(( that_dt [^\?])|( that_in [^\?]))/g);
+    return nonSubs ? nonSubs.length : 0;
 }
 
 
-function getPartsOfSpeech(text,cb){
-    var bodyFormData = new FormData();
-
+function getPartsOfSpeech(text, cb) {
     axios.post('https://parts-of-speech.info/tagger/tagger', querystring.stringify({
         text: text,
         language: 'en'
     }))
-    .then((res) => {
-        cb(res.statusCode,res,null);
-    })
-    .catch((error) => {
-        cb(null,null,error);
-    })
+        .then((res) => {
+            cb(res.statusCode, res, null);
+        })
+        .catch((error) => {
+            cb(null, null, error);
+        })
 }
 
 
-function countSubAndWh(text){
-	text = " " + text;
-    let subList = ["after[.,; ]" , " although[.,; ]" , " as[.,; ]" , " as if[.,; ]" , " as long as[.,; ]" , " as much as[.,; ]" , " as soon as[.,; ]" , " as though[.,; ]" , " assuming that[.,; ]" , " because[.,; ]" , " before[.,; ]" , " by the time [.,; ]" , " consequently[.,; ]" , " due to[.,; ]" , " even if[.,; ]" , " even though [.,; ]" , " for[.,; ]" , " hence[.,; ]" , " how[.,; ?]" , " if[.,; ]" , " in case [.,; ]" , " in order that[.,; ]" , " in order to[.,; ]" , " lest [.,; ]" , " now[.,; ]" , " now that[.,; ]" , " once[.,; ]" , " only if [.,; ]" , " provided that[.,; ]" , " rather than[.,; ]" , " since[.,; ]" , " so that[.,; ]" , " than[.,; ]" , " that[.,; ]" , " therefore[.,; ]" , " though[.,; ]" , " till [.,; ]" , " unless[.,; ]" , " until[.,; ]" , " what[,; ][^\?]*[\.]\." , " whatever [.,; ]" , " when[.,; ?]" , " whenever[.,; ]" , " where[.,; ?]" , " whereas[.,; ]" , " wherever[.,; ]" , " whether[.,; ]" , " which[.,; ?]" , " whichever[.,; ]" , " while[.,; ]" , " whoever [.,; ]" , " whom[.,; ]" , " whom[.,; ]" , " whomever[.,; ]" , " whosever[.,; ]"," who[.,; ?]","why[.,; ?]","whose[.,; ?]"];
+function countSubAndWh(text) {
+    text = " " + text;
+    let subList = ["after[.,; ]", " although[.,; ]", "[^such] as[.,; ]", " as if[.,; ]", " as long as[.,; ]", " as much as[.,; ]", " as soon as[.,; ]", " as though[.,; ]", " assuming that[.,; ]", " because[.,; ]", " before[.,; ]", " by the time [.,; ]", " consequently[.,; ]", " due to[.,; ]", " even if[.,; ]", " even though [.,; ]", " for[.,; ]", " hence[.,; ]", " how[.,; ?]", " if[.,; ]", " in case [.,; ]", " in order that[.,; ]", " in order to[.,; ]", " lest [.,; ]", " now[.,; ]", " now that[.,; ]", " once[.,; ]", " only if [.,; ]", " provided that[.,; ]", " rather than[.,; ]", " since[.,; ]", " so that[.,; ]", " than[.,; ]", " that[.,; ]", " therefore[.,; ]", " though[.,; ]", " till [.,; ]", " unless[.,; ]", " until[.,; ]", " what[,; ']", " whatever [.,; ']", " when[.,; \?']", " whenever[.,; ]", " where[.,; \?']", " whereas[.,; ]", " wherever[.,; ]", " whether[.,; ]", " which[.,; \?']", " whichever[.,; ]", " while[.,; ]", " whoever [.,; ]", " whom[.,; ]", " whomever[.,; ]", " whosever[.,; ]", " who[.,; \?']", "why[.,; \?']", "whose[.,; \?']"];
     let ret = 0;
-    for(let i = 0 ; i < subList.length ; i++){
+    for (let i = 0; i < subList.length; i++) {
         var re = new RegExp(subList[i], 'g');
         let matcher = text.match(re);
-        ret+= matcher? matcher.length : 0;
+        ret += matcher ? matcher.length : 0;
     }
     return ret;
 }
 
 
-function countUvf(text){
-    
+function countUvf(text) {
+
     let matcher = text.match(/(_VBZ|_VBD|_VBN|_VBP|_MD|_VB)/g);
-    return matcher? matcher.length : 0;
+    return matcher ? matcher.length : 0;
 }
 
 
-function countUNp(text){
-    let matcher = text.match(/(_NN|_PRP|_DT|_IN|_TO|_JJ)/g);
-    return matcher? matcher.length : 0;
+function countUNp(text) {
+    let matcher = text.match(/(_NN|_CC|_PRP|_DT|_TO|_JJ|_EX|_RB|_UH|[^as]_IN)/g);
+    let size = matcher ? matcher.length : 0;
+    let matcherSuchAs = text.match(/(such_JJ as_IN)/g);
+    size += matcherSuchAs ? matcherSuchAs.length : 0;
+    return size;
 }

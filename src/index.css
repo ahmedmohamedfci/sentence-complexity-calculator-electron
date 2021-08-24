@@ -1,6 +1,36 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: gray;
+  color: black;
   margin: auto;
   max-width: 38rem;
   padding: 2rem;
+}
+
+.noun {
+  background-color: #ccc;
+  margin-right: 7px;
+  display: inline-block;
+}
+
+.verb {
+  background-color: #cf6;
+  margin-right: 7px;
+  display: inline-block;
+}
+
+.wh {
+  background-color: #6c9;
+  margin-right: 7px;
+  display: inline-block;
+}
+
+.nsub {
+  background-color: #ee7;
+  margin-right: 7px;
+  display: inline-block;
+}
+
+.none {
+  margin-right: 7px;
 }

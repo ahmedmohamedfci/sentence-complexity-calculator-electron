@@ -1,3 +1,7 @@
+*.pak
+*.nupkg
+*.dat
+
 # Logs
 logs
 *.log
