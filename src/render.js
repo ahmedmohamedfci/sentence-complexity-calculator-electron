@@ -1,25 +1,27 @@
 // reference elements
 const calculateButton = document.getElementById("calculateButton");
 const inputTextArea = document.getElementById("inputTextArea");
+const $ = require( "jquery" );
 const resultP = document.getElementById("resultPar");
 const axios = require('axios');
 var querystring = require('querystring');
 const { match } = require('assert');
 let verbSet = new Set(['_VBZ','_VBG', '_VBD', '_VBN', '_VBP', '_MD', '_VB']);
 // nouns set should add these criteria: '[^as]_IN' and (such_JJ as_IN)
-let nounSet = new Set(['_NN', '_NNP', '_CC', '_PRP', '_DT', '_TO', '_JJ', '_EX', '_RB', '_UH']);
+let nounSet = new Set(['_NN', '_NNP', '_CC', '_PRP', '_DT', '_TO', '_JJ', '_EX', '_RB', '_UH', '_NNS', '_IN']);
 
 let whSet = new Set(
-    ["what", "whatever", "when", "whenever", "where", "whereas", "wherever", "whether", "which", "whichever", "while", "whoever", "whom", "whomever", "whosever", "who", "why", "whose"]);
+    ["what", "whatever", "when", "where", "whereas", "whether", "which", "while", "who"]);
 // now and now that?
 let subSet = new Set(
-    ['after', 'although', 'because', 'till', 'unless', 'until', 'though', 'therefore', 'that', 'than', 'now', 'before', 'consequently', 'for', 'hence', 'how', 'if', 'once', 'since']);
+    ["for", "as", "since", "therefore", "hence", "consequently", "though", "because", "unless", "once", "while", "when", "whenever", "where", "wherever", "before"]);
 let multiWordSub = 
-    ["such as", "as if", "as long as", "as much as", "as soon as", "as though", "assuming that", "by the time", "due to", "even if", "even though", "in case", "in order that", "in order to", "lest", "now that", "only if", "provided that", "rather than", "so that"];
+    ["and after", ,"due to", "provided that"];
 multiWordSub.map(sub => subSet.add(sub.replace(/ /g,'Q')));
+let ambigious = new Set(["that", "whom", "whichever", "whoever", "whomever", "whose", "why"]);
 // set event handler
 calculateButton.onclick = calculate;
-
+$('#inputTextArea').focus();
 async function calculate() {
     let texts = inputTextArea.value.split('\n');
     for (let i = 0; i < texts.length; i++) {
@@ -45,7 +47,7 @@ async function calculate() {
 function callBack(code, res, original){
     let words = res.data.taggedText.split(' ');
     let devs = [];
-    let sub = 0, wh = 0, noun = 0, verb = 0;
+    let sub = 0, wh = 0, noun = 0, verb = 0, ambig = 0;
     let newDiv = document.createElement('p');
     for (let j = 0; j < words.length; j++) {
         let wordSpan = document.createElement('span');
@@ -69,6 +71,10 @@ function callBack(code, res, original){
             wordSpan.classList.add('verb');
             verb++;
         }
+        else if(ambigious.has(trimmedWord)){
+            wordSpan.classList.add('ambigious');
+            ambig++;
+        }
         else{
             wordSpan.classList.add('none');
         }
@@ -76,8 +82,15 @@ function callBack(code, res, original){
     }
     
     let calculatedP = document.createElement('p');
-    let result = (2 * wh ) + ( 2 * sub) + noun + verb;
-    calculatedP.innerText = result;
+    let result = (2 * wh ) + ( 2 * sub) + (2 * ambig) + noun + verb;
+    calculatedP.innerHTML = 
+    `<span class="noun">Noun = ${noun}</span>
+    <span class="verb">Verb = ${verb}</span>
+    <span class="wh">WH = ${wh}</span>
+    <span class="nsub">nSub = ${sub}</span>
+    <span class = "ambigious">ambigious = ${ambig} </span>
+    <span> result = ${result}</span>`;
+    
     newDiv.appendChild(calculatedP);
     
     resultP.appendChild(newDiv);

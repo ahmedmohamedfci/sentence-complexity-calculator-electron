@@ -34,3 +34,10 @@ body {
 .none {
   margin-right: 7px;
 }
+
+
+.ambigious {
+  margin-right: 7px;
+  display: inline-block;
+  background-color: lightcoral;
+}

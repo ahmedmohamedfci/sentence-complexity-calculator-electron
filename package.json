@@ -1,7 +1,7 @@
 {
   "name": "calculat-complixity",
   "productName": "calculat-complixity",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -47,6 +47,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "electron-squirrel-startup": "^1.0.0",
+    "jquery": "^3.6.0",
     "querystring": "^0.2.0"
   },
   "devDependencies": {

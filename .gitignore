@@ -1,6 +1,7 @@
 *.pak
 *.nupkg
 *.dat
+*.bin
 
 # Logs
 logs
@@ -89,3 +90,4 @@ typings/
 # Webpack
 .webpack/
 
+out/calculat-complixity-win32-x64/
