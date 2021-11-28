@@ -1,7 +1,7 @@
 {
   "name": "calculat-complixity",
   "productName": "calculat-complixity",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {

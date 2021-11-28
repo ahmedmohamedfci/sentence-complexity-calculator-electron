@@ -45,7 +45,7 @@ async function calculate() {
 }
 
 function callBack(code, res, original){
-    let words = res.data.taggedText.split(' ');
+    let words = res.data.taggedText.replace(/\//g,'_').split(' ');
     let devs = [];
     let sub = 0, wh = 0, noun = 0, verb = 0, ambig = 0;
     let newDiv = document.createElement('p');
